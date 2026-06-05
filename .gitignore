@@ -17,8 +17,11 @@ venv/
 env/
 
 # Dagster
-.dagster/
-dagster_home/
+dagster/*.db
+dagster/.tmp_dagster_home*/
+**/.tmp_dagster_home*/
+*.db
+
 
 # PostgreSQL
 *.sql.backup
