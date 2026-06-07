@@ -1,19 +1,9 @@
-# Create bronze schema, enable pgvector extension and 4 tables
+# Create 4 bronze tables
 
 import psycopg2
 
 def create_tables(conn):
     cursor = conn.cursor()
-    
-    # Enable pgvector extension
-    cursor.execute("""
-        CREATE EXTENSION IF NOT EXISTS vector;
-    """)
-
-    # Create bronze schema
-    cursor.execute("""
-        CREATE SCHEMA IF NOT EXISTS bronze;
-    """)
 
     # Table 1 - raw sensor data from Kaggle CSV
     cursor.execute("""
@@ -81,4 +71,4 @@ def create_tables(conn):
 
     conn.commit()
     cursor.close()
-    print("Bronze schema, pgvector extension and tables created successfully")
+    print("Bronze tables created successfully")
