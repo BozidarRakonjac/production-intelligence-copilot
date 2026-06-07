@@ -1,0 +1,1 @@
+#text templates (Groq generetated)
