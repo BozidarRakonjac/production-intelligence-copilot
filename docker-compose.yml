@@ -1,50 +1,67 @@
 services:
-  postgresql:
+  postgres:
     image: pgvector/pgvector:pg16
-    container_name: production_db
+    container_name: postgres
+    restart: unless-stopped
     environment:
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./dagster/sql/init_entrypoint.sql:/docker-entrypoint-initdb.d/init_entrypoint.sql
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: production_pgadmin
+    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     depends_on:
-      postgresql:
+      postgres:
         condition: service_healthy
 
   dagster:
     build:
       context: ./dagster
       dockerfile: Dockerfile
-    container_name: production_dagster
+    container_name: dagster
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: postgresql
+      POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
     ports:
       - "3000:3000"
     volumes:
       - ./dagster:/opt/dagster/app
     depends_on:
-      postgresql:
+      postgres:
+        condition: service_healthy
+
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: simulator
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      postgres:
         condition: service_healthy
 
 volumes:
