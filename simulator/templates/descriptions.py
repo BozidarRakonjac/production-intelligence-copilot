@@ -63,3 +63,48 @@ FAILURE_TO_DEFECT_MAP = {
     "OVERSTRAIN_FAILURE": ["DEFORMATION", "CRACK_DETECTED", "DIMENSION_ERROR", "WEIGHT_DEVIATION"],
     "RANDOM_FAILURE":     ["CONTAMINATION", "POROSITY", "WEIGHT_DEVIATION", "SURFACE_SCRATCH"]
 }
+
+SHIFT_NAMES = ["morning", "evening", "night"]
+
+OPERATOR_NOTES = {
+    "normal": [
+        "Shift completed normally. No major issues reported.",
+        "Production running smoothly. Quality checks all passed.",
+        "Excellent shift performance. All targets met ahead of schedule.",
+        "Shift supervisor inspection passed. All parameters normal.",
+        "Production exceeded target. Best shift this week.",
+        "Scheduled lubrication performed. No production impact.",
+        "Full shift completed without interruption. Operator performance excellent.",
+        "Tool changed at hour 4. Production resumed at full speed.",
+    ],
+    "minor": [
+        "Minor slowdown at start of shift due to material changeover.",
+        "Machine running slower than usual after maintenance check.",
+        "Brief stoppage detected and resolved quickly by operator.",
+        "Coolant system refilled during shift. Brief stoppage.",
+        "Shift handover delayed by 15 minutes. Production started late.",
+        "New material batch introduced. First hour output below normal.",
+        "Machine warm-up took longer than usual. Cold start issue.",
+        "Raw material batch change caused brief quality adjustment period.",
+    ],
+    "serious": [
+        "Output below target. Multiple stoppages during shift.",
+        "Machine vibration noticed mid shift. Reported to maintenance.",
+        "Quality control flagged batch. Production halted for inspection.",
+        "Operator reported unusual noise from spindle. Maintenance notified.",
+        "Production target revised down due to repeated machine issues.",
+        "Two unplanned stoppages during shift. Maintenance team called.",
+        "Significant downtime recorded. Root cause under investigation.",
+        "Shift performance below average. Multiple fault interventions required.",
+    ],
+    "critical": [
+        "Emergency stop triggered multiple times. Maintenance on site.",
+        "Severe machine failures caused major production loss this shift.",
+        "Critical shift. Machine down for extended period. Output severely impacted.",
+        "Multiple critical faults. Shift supervisor escalated to engineering team.",
+        "Production almost halted. Emergency maintenance called during shift.",
+        "Worst shift this month. Machine reliability issues need urgent attention.",
+        "Extended downtime due to cascading failures. Full inspection required.",
+        "Shift ended early due to safety concerns from repeated failures.",
+    ]
+}
