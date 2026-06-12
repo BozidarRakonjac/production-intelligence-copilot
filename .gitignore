@@ -21,6 +21,15 @@ dagster/*.db
 dagster/.tmp_dagster_home*/
 **/.tmp_dagster_home*/
 *.db
+.tmp_dagster_home_*/
+dagster/.dagster_home/
+**/.dagster_home/
+dagster/storage/
+**/storage/
+**/id.yaml
+**/*.complete
+**/*.out
+**/*.err
 
 
 # PostgreSQL

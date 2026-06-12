@@ -13,6 +13,22 @@ from resources.postgres import PostgresResource
 def silver_machine_telemetry(context: AssetExecutionContext, postgres: PostgresResource, bronze_machine_telemetry: pd.DataFrame) -> Output:
 
     df = bronze_machine_telemetry.copy()
+    initial_count = len(df)
+
+    # Safety checks
+    df = df.drop_duplicates(subset=['udi'])
+    df = df.dropna(subset=['udi', 'inserted_at'])
+    df = df[df['air_temp'] > 0]
+    df = df[df['process_temp'] > 0]
+    df = df[df['rpm'] > 0]
+
+    dropped = initial_count - len(df)
+    if dropped > 0:
+        context.log.warning(f"Dropped {dropped} invalid/duplicate rows")
+
+    if df.empty:
+        context.log.warning("No data received from bronze_machine_telemetry!")
+
 
     df['air_temp_celsius'] = df['air_temp'] - 273.15
     df['process_temp_celsius'] = df['process_temp'] - 273.15
