@@ -2,6 +2,7 @@ import json
 import pandas as pd
 from dagster import Output, asset, AssetExecutionContext, AssetIn
 from resources.postgres import PostgresResource
+from resources.embeddings import EmbeddingResource
 from utils.text_builders import build_downtime_text, build_quality_text, build_production_text
 from utils.metadata_builders import build_downtime_metadata, build_quality_metadata, build_production_metadata
 
@@ -20,6 +21,7 @@ from utils.metadata_builders import build_downtime_metadata, build_quality_metad
 def gold_ai_ready_events(
     context: AssetExecutionContext,
     postgres: PostgresResource,
+    embedding: EmbeddingResource,
     silver_downtime_logs: pd.DataFrame,
     silver_quality_inspections: pd.DataFrame,
     silver_production_events: pd.DataFrame,
@@ -49,10 +51,16 @@ def gold_ai_ready_events(
         })
 
     df = pd.DataFrame(records)
-
     context.log.info(f"Total AI-ready records built: {len(df)}")
 
-    # Write to gold table WITHOUT embeddings first
+    # Generate embeddings for content column
+    context.log.info("Generating embeddings with nomic-embed-text...")
+    embeddings_model = embedding.get_embeddings()
+    embeddings = embeddings_model.embed_documents(df['content'].tolist())
+    df['embedding'] = embeddings
+    context.log.info(f"Embeddings generated: {len(embeddings)} vectors")
+
+    # Write to gold table
     engine = postgres.get_engine()
     df.to_sql("ai_ready_events", engine, schema="gold", if_exists="replace", index=True, index_label="id")
 
@@ -62,6 +70,7 @@ def gold_ai_ready_events(
         value=df,
         metadata={
             "num_records": len(df),
+            "num_embeddings": len(embeddings),
             "columns": list(df.columns)
         }
     )

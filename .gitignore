@@ -30,6 +30,11 @@ dagster/storage/
 **/*.complete
 **/*.out
 **/*.err
+dagster/logs/
+dagster/.nux
+dagster/.telemetry
+dagster/schedules/
+dagster/runs/
 
 
 # PostgreSQL
