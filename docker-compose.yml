@@ -41,6 +41,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      OLLAMA_HOST: http://ollama:11434
+      EMBEDDING_MODEL: nomic-embed-text
     ports:
       - "3000:3000"
     volumes:
@@ -64,5 +66,14 @@ services:
       postgres:
         condition: service_healthy
 
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   postgres_data:
+  ollama_data:
