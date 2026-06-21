@@ -7,11 +7,10 @@ from templates.descriptions import SHIFT_NAMES, OPERATOR_NAMES, OPERATOR_NOTES
 def load_production(conn):
     cursor = conn.cursor()
 
-    # Read all telemetry rows ordered by udi
     cursor.execute("""
-        SELECT udi, type, machine_failure, inserted_at
+        SELECT udi, type, machine_id, machine_failure, inserted_at
         FROM bronze.machine_telemetry
-        ORDER BY udi
+        ORDER BY inserted_at
     """)
     rows = cursor.fetchall()
 
@@ -20,28 +19,24 @@ def load_production(conn):
     shift_number = 0
     fault_count_in_shift = 0
     shift_index = 0
+    machine_id_in_shift = None
 
     for i, row in enumerate(rows):
-        udi, machine_type, machine_failure, inserted_at = row
+        udi, machine_type, machine_id, machine_failure, inserted_at = row
+        machine_id_in_shift = machine_id
 
-        # Track faults in current shift
         if machine_failure == 1:
             fault_count_in_shift += 1
 
-        # Every 200 rows create production event
         if (i + 1) % 200 == 0:
             shift_number += 1
             shift_name = SHIFT_NAMES[shift_index % len(SHIFT_NAMES)]
             shift_index += 1
 
-            # Calculate start and end time
             end_time = inserted_at
             start_time = end_time - timedelta(hours=8)
-
-            # Planned quantity always same
             planned_qty = 500
 
-           # Select note based on fault count
             if fault_count_in_shift == 0:
                 actual_qty = random.randint(470, 500)
                 note = random.choice(OPERATOR_NOTES["normal"])
@@ -58,27 +53,20 @@ def load_production(conn):
             try:
                 cursor.execute("""
                     INSERT INTO bronze.production_events
-                        (shift_id, machine_type, shift, planned_qty,
+                        (shift_id, machine_type, machine_id, shift, planned_qty,
                          actual_qty, start_time, end_time, operator, notes)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (shift_id) DO NOTHING
                 """, (
-                    shift_number,
-                    machine_type,
-                    shift_name,
-                    planned_qty,
-                    actual_qty,
-                    start_time,
-                    end_time,
-                    random.choice(OPERATOR_NAMES),
-                    note
+                    shift_number, machine_type, machine_id_in_shift, shift_name,
+                    planned_qty, actual_qty, start_time, end_time,
+                    random.choice(OPERATOR_NAMES), note
                 ))
                 inserted += 1
             except Exception as e:
                 print(f"Skipping production row {shift_number}: {e}")
                 skipped += 1
 
-            # Reset fault counter for next shift
             fault_count_in_shift = 0
 
     conn.commit()

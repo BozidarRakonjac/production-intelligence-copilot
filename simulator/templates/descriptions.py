@@ -108,3 +108,16 @@ OPERATOR_NOTES = {
         "Shift ended early due to safety concerns from repeated failures.",
     ]
 }
+
+# Machine ID configuration - 10 total machines across 3 types
+MACHINE_IDS = {
+    "L": ["L-01", "L-02", "L-03", "L-04", "L-05"],
+    "M": ["M-01", "M-02", "M-03"],
+    "H": ["H-01", "H-02"],
+}
+
+
+def get_machine_id(machine_type: str, row_index: int) -> str:
+    """Round-robin assignment of machine_id within a type."""
+    ids = MACHINE_IDS.get(machine_type, ["UNKNOWN-01"])
+    return ids[row_index % len(ids)]
