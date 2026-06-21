@@ -17,10 +17,14 @@ venv/
 env/
 
 # Dagster
-dagster/*.db
-dagster/.tmp_dagster_home*/
-**/.tmp_dagster_home*/
-*.db
+dagster/.telemetry/
+**/.telemetry/
+**/*.complete
+**/*.err
+**/*.out
+dagster/storage/
+**/storage/
+**/id.yaml
 
 
 # PostgreSQL
