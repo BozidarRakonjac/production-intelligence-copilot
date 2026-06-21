@@ -5,6 +5,7 @@ from resources.postgres import PostgresResource
 from resources.embeddings import EmbeddingResource
 from utils.text_builders import build_downtime_text, build_quality_text, build_production_text
 from utils.metadata_builders import build_downtime_metadata, build_quality_metadata, build_production_metadata
+from sqlalchemy import text
 
 
 @asset(
@@ -58,11 +59,24 @@ def gold_ai_ready_events(
     embeddings_model = embedding.get_embeddings()
     embeddings = embeddings_model.embed_documents(df['content'].tolist())
     df['embedding'] = embeddings
+
+    # Convert embeddings to PostgreSQL vector string format
+    df['embedding'] = df['embedding'].apply(lambda x: str(x))
+
     context.log.info(f"Embeddings generated: {len(embeddings)} vectors")
 
-    # Write to gold table
+   # Write to gold table
     engine = postgres.get_engine()
     df.to_sql("ai_ready_events", engine, schema="gold", if_exists="replace", index=True, index_label="id")
+
+    # Fix embedding column type to proper pgvector type
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE gold.ai_ready_events 
+            ALTER COLUMN embedding TYPE vector(768) 
+            USING embedding::vector(768);
+        """))
+        conn.commit()
 
     context.log.info(f"Gold AI-ready events written: {len(df)} rows")
 
