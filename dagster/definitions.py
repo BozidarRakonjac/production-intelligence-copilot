@@ -9,6 +9,8 @@ from assets.silver.silver_machine_telemetry import silver_machine_telemetry
 from assets.silver.silver_downtime_logs import silver_downtime_logs
 from assets.silver.silver_quality_inspections import silver_quality_inspections
 from assets.silver.silver_production_events import silver_production_events
+from assets.gold.ai_ready.gold_ai_ready_events import gold_ai_ready_events
+from resources.embeddings import EmbeddingResource
 
 defs = Definitions(
     assets=[
@@ -19,11 +21,16 @@ defs = Definitions(
         silver_machine_telemetry,
         silver_downtime_logs,
         silver_quality_inspections,
-        silver_production_events
+        silver_production_events,
+        gold_ai_ready_events
     ],
     resources={
         "postgres": PostgresResource(
             connection_string=f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
+        ),
+        "embedding": EmbeddingResource(
+            base_url=os.getenv("OLLAMA_HOST", "http://ollama:11434"),
+            model_name=os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
         )
     }
 )
