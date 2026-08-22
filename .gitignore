@@ -1,0 +1,65 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+
+# Dagster
+dagster/*.db
+dagster/.tmp_dagster_home*/
+**/.tmp_dagster_home*/
+*.db
+.tmp_dagster_home_*/
+dagster/.dagster_home/
+**/.dagster_home/
+dagster/storage/
+**/storage/
+**/id.yaml
+**/*.complete
+**/*.out
+**/*.err
+
+
+# PostgreSQL
+*.sql.backup
+*.dump
+
+# Data files (keep example, ignore real data)
+*.csv
+!simulator/data/.gitkeep
+
+# Docker
+.docker/
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Node / React Native
+node_modules/
+.expo/
+*.lock
+npm-debug.log*
+
+# Langfuse
+.langfuse/
