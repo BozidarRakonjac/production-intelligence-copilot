@@ -15,7 +15,8 @@ def _clean_parts(parts: list) -> str:
 
 def build_downtime_text(row) -> str:
     parts = [
-        f"Machine type: {row.get('machine_type', '')}",
+        f"Machine: {row.get('machine_id', '')} (type {row.get('machine_type', '')})",
+        f"Date: {row.get('started_at', '')}",
         f"Failure: {row.get('reason_code', '')}",
         f"Description: {row.get('description', '')}",
         f"Duration: {row.get('duration_min', '')} minutes",
@@ -26,7 +27,8 @@ def build_downtime_text(row) -> str:
 
 def build_quality_text(row) -> str:
     parts = [
-        f"Machine type: {row.get('machine_type', '')}",
+        f"Machine: {row.get('machine_id', '')} (type {row.get('machine_type', '')})",
+        f"Date: {row.get('inspected_at', '')}",
         f"Defect type: {row.get('defect_type', '')}",
         f"Defects found: {row.get('defect_count', '')} out of {row.get('sample_size', '')} samples",
         f"Defect rate: {row.get('defect_rate', '')}%",
@@ -38,8 +40,9 @@ def build_quality_text(row) -> str:
 
 def build_production_text(row) -> str:
     parts = [
+        f"Machine: {row.get('machine_id', '')} (type {row.get('machine_type', '')})",
+        f"Date: {row.get('start_time', '')}",
         f"Shift: {row.get('shift', '')}",
-        f"Machine type: {row.get('machine_type', '')}",
         f"Output: {row.get('actual_qty', '')} out of {row.get('planned_qty', '')} planned units",
         f"Efficiency: {row.get('efficiency', '')}%",
         f"Operator: {row.get('operator', '')}",

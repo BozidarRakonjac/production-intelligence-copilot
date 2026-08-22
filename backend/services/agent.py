@@ -6,20 +6,19 @@ from langchain_groq import ChatGroq
 from core.config import GROQ_API_KEY, LLM_MODEL
 from services.retrieval import hybrid_search
 from services.sql_tool import (
-    operator_shift_stats,
-    machine_failure_stats,
-    quality_defect_stats,
-    shift_performance_stats,
     overall_summary_stats,
-    machine_quality_stats
+    downtime_breakdown,
+    quality_breakdown,
+    production_breakdown,
+    machine_full_report,
 )
 
 
 @tool
 def search_events(query: str) -> str:
-    """Search for specific events, incidents, or descriptions about machine 
-    failures, quality issues, or production notes. Use this for 'why' or 
-    'what happened' questions about specific incidents."""
+    """Search for EXAMPLE descriptions of specific incidents to understand 
+    WHAT happened, the cause, and resolution details. Returns only a few 
+    example matches - NEVER use this for counting or 'how many' questions."""
     results = hybrid_search(query, {})
     if not results:
         return "No relevant events found."
@@ -27,67 +26,67 @@ def search_events(query: str) -> str:
 
 
 @tool
-def get_operator_statistics() -> str:
-    """Get statistics about operators including total shifts, critical 
-    shifts count, and average efficiency per operator. Use this for 
-    questions about which operator performs best/worst or has most issues."""
-    return operator_shift_stats()
+def get_kpi_summary(time_range: str = "all_time") -> str:
+    """Get overall KPI summary: downtime, MTTR, defect rate, quality rate, 
+    performance, estimated OEE. time_range options: 'today', 'yesterday', 
+    'this_week', 'this_month', 'last_30_days', 'last_90_days', 'all_time'."""
+    return overall_summary_stats(time_range)
 
 
 @tool
-def get_machine_failure_statistics() -> str:
-    """Get failure counts and downtime statistics grouped by machine type 
-    (L, M, H). Use this for questions about which machine fails most or 
-    has most downtime."""
-    return machine_failure_stats()
+def get_downtime_breakdown(group_by: str = "machine_id", time_range: str = "all_time") -> str:
+    """Get downtime counts and durations grouped by a dimension. 
+    group_by options: 'machine_id' (specific machine like L-01), 
+    'machine_type' (L/M/H category), 'reason_code' (failure type), 
+    'resolved_by' (technician). time_range options: 'today', 'yesterday', 
+    'this_week', 'this_month', 'last_30_days', 'last_90_days', 'all_time'."""
+    return downtime_breakdown(group_by, time_range)
 
 
 @tool
-def get_quality_statistics() -> str:
-    """Get defect statistics grouped by defect type. Use this for questions 
-    about most common defects or quality issue patterns."""
-    return quality_defect_stats()
-
-@tool
-def get_machine_quality_statistics() -> str:
-    """Get defect rate statistics grouped by machine type (L, M, H). Use 
-    this for questions comparing quality/defects across different machines, 
-    or combining machine downtime with machine quality issues."""
-    return machine_quality_stats()
-
+def get_quality_breakdown(group_by: str = "machine_id", time_range: str = "all_time") -> str:
+    """Get quality/defect statistics grouped by a dimension. 
+    group_by options: 'machine_id', 'machine_type', 'defect_type'. 
+    time_range options: 'today', 'yesterday', 'this_week', 'this_month', 
+    'last_30_days', 'last_90_days', 'all_time'."""
+    return quality_breakdown(group_by, time_range)
 
 
 @tool
-def get_shift_statistics() -> str:
-    """Get performance statistics grouped by shift (morning/evening/night). 
-    Use this for questions comparing shift performance."""
-    return shift_performance_stats()
+def get_production_breakdown(group_by: str = "machine_id", time_range: str = "all_time") -> str:
+    """Get production/efficiency statistics grouped by a dimension. 
+    group_by options: 'machine_id', 'machine_type', 'shift', 'operator'. 
+    time_range options: 'today', 'yesterday', 'this_week', 'this_month', 
+    'last_30_days', 'last_90_days', 'all_time'."""
+    return production_breakdown(group_by, time_range)
 
 
 @tool
-def get_overall_summary() -> str:
-    """Get high level summary statistics across all production data. Use 
-    this for general overview questions."""
-    return overall_summary_stats()
+def get_machine_report(machine_id: str) -> str:
+    """Get a complete report for one specific machine by its ID 
+    (e.g. 'L-01', 'M-02', 'H-01'): failures, repair time, defect rate, 
+    efficiency. Use this for 'what happened on machine X' or 
+    'compare machine A vs B' questions (call once per machine)."""
+    return machine_full_report(machine_id)
 
 
 SYSTEM_PROMPT = """You are a Production Intelligence Copilot, an AI assistant for manufacturing and operations management.
 
-You help managers and engineers understand production data including machine telemetry, downtime events, quality inspections, and production output.
+You help managers and engineers monitor KPIs, investigate issues, and compare performance using real production data covering machine telemetry, downtime, quality, and production output across 10 machines (L-01 to L-05, M-01 to M-03, H-01 to H-02) over the last 90 days.
 
 RULES:
-    - Use the available tools to answer questions accurately. Choose the right tool based on the question type:
-    - For "why" or "what happened" questions about specific incidents -> use search_events
-    - For counting, ranking, or "which X has most/least Y" questions -> use the relevant statistics tool
-    - For general overview questions -> use get_overall_summary
-    - Never make up information. Only answer based on tool results.
-    - Be concise and direct. Use exact numbers from tool results.
-    - Never assume or state a person's gender. Use gender-neutral language.
-    - When ranking or comparing, check for ties. If multiple items share the same value, mention all of them.
-    - This system reflects a snapshot of current operational data. It does not perform predictive simulations, forecasts, or what-if analysis.
-    - If a question requires data dimensions not available in any tool (e.g. defect rate by shift, when shift only exists in production data), clearly state what data is available instead of guessing or inventing calculations.
-    - If asked a hypothetical or predictive question (e.g. "what if we reduced X"), explain that this system shows current real data, not simulations, and offer the closest real statistic instead.
-    - You can answer in English or Serbian depending on what language the user asks in.
+- ALWAYS use a statistics tool for counts, frequency, "how many", "most/least", rankings, or comparisons. NEVER use search_events for these.
+- Use search_events ONLY to find details/descriptions of specific incidents.
+- Use get_machine_report for "what happened on machine X" or comparing specific machines.
+- Use get_downtime_breakdown / get_quality_breakdown / get_production_breakdown with the right group_by for ranking/comparison questions (by machine, type, shift, operator, technician, defect type, or reason).
+- Use get_kpi_summary for overview/executive summary questions, with time_range matching what was asked.
+- Never make up information. Only answer based on tool results.
+- Never assume or state a person's gender. Use gender-neutral language.
+- When ranking or comparing, check for ties. If multiple items share the same value, mention all of them.
+- This system reflects real historical operational data over the last 90 days. It does not perform predictive simulations or what-if analysis.
+- For executive summaries, call get_kpi_summary plus the relevant breakdown tools and synthesize into a clear report.
+- You can answer in English or Serbian depending on what language the user asks in.
+- You can answer in Serbian ONLY if the user's question is written in Serbian. If the question is in English, you MUST respond in English. Match the user's input language exactly, do not switch languages on your own.
 """
 
 
@@ -100,13 +99,12 @@ def get_agent():
 
     tools = [
         search_events,
-        get_operator_statistics,
-        get_machine_failure_statistics,
-        get_quality_statistics,
-        get_shift_statistics,
-        get_overall_summary,
+        get_kpi_summary,
+        get_downtime_breakdown,
+        get_quality_breakdown,
+        get_production_breakdown,
+        get_machine_report,
     ]
-
     return create_agent(
         model=llm,
         tools=tools,
